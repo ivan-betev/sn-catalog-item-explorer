@@ -1,0 +1,463 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<unload unload_date="2023-10-08 09:00:42">
+<sp_widget action="INSERT_OR_UPDATE">
+<category>custom</category>
+<client_script><![CDATA[api.controller = function ($scope, $window) {
+  /* widget controller */
+  var c = this;
+
+  /* Variable and Service Initizalization */
+  setWidgetState("initial", c.data.catalogCategories);
+
+  /* Function to be called when "Show All Items" has been clicked */
+  c.showAllItems = function () {
+    setWidgetState("initial", c.data.catalogCategories);
+    c.filteredCatalogItems = c.displayItems = c.data.catalogItems;
+    c.isShowAllSelected = true;
+    c.data.currentPage = resetCurrentPage();
+    c.isMultiplePage = checkMultiPage(c.filteredCatalogItems.length, c.data.itemsPerPage);
+  };
+
+  /* Function to be called when "Quick Search" is active */
+  c.quickSearch = function () {
+    if ($scope.searchText.length == 0) {
+      setWidgetState("initial", c.data.catalogCategories);
+      return;
+    }
+
+    setWidgetState("default-selected", c.data.catalogCategories);
+    c.data.currentPage = resetCurrentPage();
+    c.filteredCatalogItems = c.displayItems = $scope.searchText.length > 0 ? quickSearch(c.data.catalogItems, $scope.searchText) : [];
+    c.isMultiplePage = checkMultiPage(c.filteredCatalogItems.length, c.data.itemsPerPage);
+  };
+
+  /* Function to be called when category letter has been clicked */
+  c.selectCategory = function (category) {
+    setWidgetState("default", c.data.catalogCategories);
+    category.selected = true;
+    c.data.currentPage = resetCurrentPage();
+    c.filteredCatalogItems = selectCategory(c.data.catalogItems, category);
+    c.isMultiplePage = checkMultiPage(c.filteredCatalogItems.length, c.data.itemsPerPage);
+    c.displayItems = calculateDisplayCatalogItems(c.filteredCatalogItems, c.data.currentPage, c.data.itemsPerPage);
+  };
+
+  /* Function to be called when reset button has been pressed*/
+  c.resetState = function () {
+    setWidgetState("initial", c.data.catalogCategories);
+  };
+
+  /* Function to make the whole row clickable */
+  c.openUrl = function (itemId) {
+    var fullLink = c.data.defaultCatalogLink + itemId;
+    $window.open(fullLink, "_blank");
+  };
+
+  /* Pagination */
+
+  /* Function to be called by the form element when another page has been selected */
+  c.pageChanged = function () {
+    c.displayItems = calculateDisplayCatalogItems(c.filteredCatalogItems, c.data.currentPage, c.data.itemsPerPage);
+  };
+
+  /* Functions */
+
+  /* If it is a quick seach then we are giving filtered array based on the condition */
+  function quickSearch(items, searchText) {
+    return items.filter(function (item) {
+      try {
+        /* First we need to check that values are not null, otherwise assign them with empty space to avoid app crash */
+        var itemName = item.name != null ? item.name.toLowerCase() : "";
+        var itemDescription = item.description != null ? item.description.toLowerCase() : "";
+
+        /* Return item if quick search text we placed in our input field is contained in the item name or description */
+        return (itemName).indexOf(searchText.toLowerCase()) != -1 || (itemDescription).indexOf(searchText.toLowerCase()) != -1;
+      } catch (error) {
+        console.log("Something went wrong while filtering searching by item name or description");
+      }
+    });
+  }
+
+  /* If it is a quick seach then we are giving filtered array based on the condition */
+  function selectCategory(items, category) {
+    return items.filter(function (item) {
+      return (item.name.toLowerCase()).substring(0, 1) == category.letter.toLowerCase();
+    });
+  }
+
+  /* Function to reset the category selection to default state (all are non-selected) */
+  function resetSelected(items) {
+    for (var i = 0; i < items.length; i++) {
+      items[i].selected = false;
+    }
+    c.isShowAllSelected = false;
+  }
+
+  /* Function to reset quick search text in the input field */
+  function resetQuickSearchText() {
+    $scope.searchText = "";
+  }
+
+  /* Function that accumulates reset of selected category and quick search text */
+  function setWidgetState(state, items) {
+    /* Default state is intended to clear quick search text and reset category selection only */
+    if (state == "default") {
+      resetSelected(items);
+      resetQuickSearchText();
+
+      return c.data.msgDefaultState;
+    }
+
+    /* Default-Selected is intended to reset the category selection state only e.g. for All items category selection */
+    if (state == "default-selected") {
+      resetSelected(items);
+
+      return c.data.msgCategoryReset;
+    }
+
+    /* Initial is intended to bring the widget to the initial state same as after pager reload */
+    if (state == "initial") {
+      resetQuickSearchText();
+      resetSelected(items);
+      c.filteredCatalogItems = c.data.catalogItems;
+      c.displayItems = [];
+      c.isShowAllSelected = false;
+      c.isMultiplePage = false;
+
+      return "Initialization has completed";
+    }
+  }
+
+  /* Function to flag multipaging which is used by pagination to display page selector */
+  function checkMultiPage(itemsToDisplay, numOfPages) {
+    return Math.ceil(itemsToDisplay / numOfPages) > 1 ? true : false;
+  }
+
+  /* Function to reset the current page to 1 everytime the category changes */
+  function resetCurrentPage() {
+    return 1;
+  }
+
+  /* Function to prepare the list of items to display based on the selected page */
+  function calculateDisplayCatalogItems(filteredItemsArray, currentPage, itemsPerPage) {
+    return filteredItemsArray.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  }
+
+  /* Debug - Logs */
+  if (c.data.isDebugEnabled) {
+    console.log(c);
+  }
+};]]></client_script>
+<controller_as>c</controller_as>
+<css>.category-header {    
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;    
+    width: 100%;
+    padding: 10px 0;
+    margin: 0;
+}
+
+.catalog-category {
+    font-size: 25px;
+    font-weight: 600;
+}
+
+.category-letter:hover {
+    transform: scale(1.4);
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.selected {
+    transform: scale(1.4);
+    background-color: #FFFFFF;
+    color: darkgreen;
+}
+
+.list-inline {
+    margin: 0;
+}
+
+.list-group-item:hover {
+    background-color: #EEE;
+}
+
+.primary-display {
+    color: #428BCA;
+}
+
+.main-column {
+    cursor: pointer;
+}
+
+.panel-footer, .panel-heading {
+  	height: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .copyright {
+        align-self: center;
+    }
+}
+
+.xiva-quick-search-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    border-left: 1px solid #ccc;    
+
+    .fa-search::before {
+        padding-right: 1rem;        
+    }
+}</css>
+<data_table>sp_instance</data_table>
+<demo_data/>
+<description>Full list of items split by first letter category</description>
+<docs display_value=""/>
+<field_list/>
+<has_preview>false</has_preview>
+<id>xiva-catalog-item-explorer</id>
+<internal>false</internal>
+<link><![CDATA[function link(scope, element, attrs, controller) {  }]]></link>
+<name>Catalog Item Explorer</name>
+<option_schema>[{
+    "displayValue": "Catalog",
+    "hint": "Which catalog should this widget work with?",
+    "name": "used_catalog",
+    "section": "Data",
+    "default_value": "e0d08b13c3330100c8b837659bba8fb4",
+    "label": "Used catalog",
+    "type": "reference",
+    "value": "sc_catalog",
+    "ed": {
+        "reference": "sc_catalog"
+    }
+}, {
+    "hint": "How many items should be displayed per page?",
+    "name": "items_per_page",
+    "section": "Presentation",
+    "default_value": "10",
+    "label": "Items per page",
+    "type": "integer"
+}, {
+    "hint": "How should All Items category be called?",
+    "name": "show_all_items_category_label",
+    "section": "Presentation",
+    "default_value": "All",
+    "label": "Show All Items category label",
+    "type": "string"
+}, {
+    "hint": "Should debug logging be enabled?",
+    "name": "is_debug_mode_on",
+    "section": "other",
+    "default_value": "false",
+    "label": "Enable Debug",
+    "type": "boolean"
+}, {
+    "hint": "What link should the widget use to redirect to the catalog item?",
+    "name": "default_item_link",
+    "section": "Behavior",
+    "default_value": "?id=sc_cat_item&amp;sys_id=",
+    "label": "Default link to the catalog item",
+    "type": "string"
+}, {
+    "hint": "How many pages should be displayed in paginator at once?",
+    "name": "max_pages_in_paginator",
+    "section": "Presentation",
+    "default_value": "4",
+    "label": "Maximum pages in the pagination component",
+    "type": "integer"
+}, {
+    "hint": "Should the First/Last links be displayed in the paginator?",
+    "name": "show_boundary_links_in_paginator",
+    "section": "Presentation",
+    "default_value": "false",
+    "label": "Show boundary links in the pagination component",
+    "type": "boolean"
+}, {
+    "hint": "What text should be used for Quick Search field as a placeholder?",
+    "name": "quick_search_placeholder",
+    "section": "Presentation",
+    "default_value": "Quick search...",
+    "label": "Quick Search placeholder message",
+    "type": "string"
+}, {
+    "hint": "What title should this widget have?",
+    "name": "widget_title",
+    "section": "Presentation",
+    "default_value": "Catalog Item Explorer",
+    "label": "Widget Title",
+    "type": "string"
+}, {
+    "hint": "Display copyright in the right bottom corner",
+    "name": "show_copyright",
+    "section": "Presentation",
+    "default_value": "false",
+    "label": "Show Copyright",
+    "type": "boolean"
+}]</option_schema>
+<public>false</public>
+<roles/>
+<script><![CDATA[(function () {
+
+    /* Configuration */
+    data.isDebugEnabled = (options.is_debug_mode_on === "true");
+    data.showCopyright = options.show_copyright === "true" || false;
+    data.showAllMsg = gs.getMessage(options.show_all_items_category_label) || gs.getMessage("All");
+    data.defaultCatalogLink = options.default_item_link ||"?id=sc_cat_item&sys_id=";
+    data.itemsPerPage = $sp.getParameter("items_per_page") || options.items_per_page || 10;
+    data.maxPagesInPaginator = options.max_pages_in_paginator || 4;
+    data.showBoundaryLinks = (options.show_boundary_links_in_paginator === "true") || false;
+    data.widgetTitle = options.widget_title || "Catalog Item Explorer";
+
+    /* Used to set the default first page for the pagination */
+    data.currentPage = 1;    
+
+    /* Messages */
+    data.showAllMsg = gs.getMessage(options.show_all_items_category_label) || gs.getMessage("All");
+    data.msgQuickSearchPlaceholder = gs.getMessage(options.quick_search_placeholder);
+    data.msgDefaultState = gs.getMessage("Widget fields were set back to default");
+    data.msgCategoryReset = gs.getMessage("Category selection was reset");
+
+    /* Get Catalog ID */
+    var catalogsId = $sp.getParameter("used_catalog") || options.used_catalog;
+
+    /* Get all catalog items */
+    var catalogItems = new GlideRecordSecure('sc_cat_item');
+    catalogItems.addQuery('sc_catalogs', 'LIKE', catalogsId);
+    catalogItems.addQuery('active', true);
+    catalogItems.orderBy('name');
+    catalogItems.query();
+
+    /* Save all sys_ids and names of catalog items to an array */
+    data.catalogItems = [];
+
+    while (catalogItems.next()) {
+        if (!$sp.canReadRecord("sc_cat_item", catalogItems.sys_id.getDisplayValue())) {
+            continue;
+        }
+
+        data.catalogItems.push({
+            itemId: catalogItems.getValue('sys_id').toString(),
+            name: catalogItems.getValue('name'),
+            description: catalogItems.getValue('short_description')
+        });
+    }
+
+    /* Get first letters to generate categories */
+    data.catalogCategories = getUniqueFirstLetters(data.catalogItems);
+
+    function getUniqueFirstLetters(strings) {
+        /* Create an empty array to store the first letters */
+        var firstLetters = [];
+
+        /* Iterate over the input array of strings */
+        for (var i = 0; i < strings.length; i++) {
+            /* Get the first letter of the current string */
+            var firstLetter = strings[i].name.charAt(0);
+            var exists = false;
+
+            /* Check if the letter already exists in the array */
+            for (var j = 0; j < firstLetters.length; j++) {
+                if (firstLetters[j].letter === firstLetter.toUpperCase()) {
+                    exists = true;
+                    break;
+                }
+            }
+
+            /* Check if the first letter already exist in the array */
+            if (!exists) {
+                /* If not add it */ 
+                firstLetters.push({
+                    letter: firstLetter,
+                    selected: false
+                });
+            }
+        }
+
+        /* Sort the array of objects, otherwise the simplier version of sort might be used */
+        firstLetters.sort(function (a, b) {
+            return a.letter.localeCompare(b.letter);
+        });
+
+        /* Return the sorted array of unique first letters */
+        return firstLetters;
+    }
+})();]]></script>
+<servicenow>false</servicenow>
+<sys_class_name>sp_widget</sys_class_name>
+<sys_created_by>admin.biva</sys_created_by>
+<sys_created_on>2023-01-16 09:48:44</sys_created_on>
+<sys_customer_update>false</sys_customer_update>
+<sys_id>d0e60baf879861508009ac1a0cbb3593</sys_id>
+<sys_mod_count>998</sys_mod_count>
+<sys_name>Catalog Item Explorer</sys_name>
+<sys_package display_value="Global" source="global">global</sys_package>
+<sys_policy/>
+<sys_replace_on_upgrade>false</sys_replace_on_upgrade>
+<sys_scope display_value="Global">global</sys_scope>
+<sys_update_name>sp_widget_d0e60baf879861508009ac1a0cbb3593</sys_update_name>
+<sys_updated_by>admin.biva</sys_updated_by>
+<sys_updated_on>2023-10-08 08:58:15</sys_updated_on>
+<template><![CDATA[<div class="panel panel-default b">
+    <!-- Panel Heading -->
+    <div class="panel-heading">
+        <div><h2 class="panel-title">{{::c.data.widgetTitle}}</h2></div>
+        <div><button ng-if="c.filteredCatalogItems.length > 0" type="button"
+            class="btn btn-primary btn-xs" ng-click="c.showAllItems()">{{::c.data.showAllMsg}}</button>
+            <button ng-if="c.displayItems.length > 0" type="button"
+                class="btn btn-danger btn-xs hidden-xs" ng-click="c.resetState()">Reset</button></div>
+    </div>
+    <!-- Panel Body -->
+    <div class="panels-container">
+        <div class="row category-header fit-content">
+            <!-- Catalog Category Letters -->
+            <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
+                <ul class="list-inline text-center">
+                    <li class="list-inline-item" ng-repeat="category in c.data.catalogCategories">
+                        <div class="category-letter" item="category" ng-class="{'selected' : category.selected}"
+                            ng-click="c.selectCategory(category)"><span
+                                class="catalog-category">{{category.letter}}</span>
+                        </div>
+                    </li>                    
+                </ul>
+            </div>
+            <!-- Quick Search Section -->
+            <div class="xiva-quick-search-container col-lg-4 col-md-4 hidden-sm hidden-xs">
+                <span class="fa fa-search"></span><input class="form-control" type="text"
+                    ng-model="searchText" ng-change="c.quickSearch()"
+                    placeholder="{{c.data.msgQuickSearchPlaceholder}}">
+            </div>
+        </div>
+    </div>
+    <!-- Item List -->
+    <ul role="rowgroup" class="list-group padder-l-none padder-r-none">
+        <li class="list-group-item" ng-repeat="item in c.displayItems | limitTo:c.data.itemsPerPage" style="margin:0;"
+            ng-click="c.openUrl(item.itemId)">
+            <div role="cell" class="padder-l-none padder-r-none main-column">
+                <div class="primary-display">
+                    {{item.name}}
+                </div>
+                <small class="text-muted">
+                    <div class="secondary-display">
+                        <span>{{item.description}}</span>
+                    </div>
+                </small>
+            </div>
+        </li>
+    </ul>
+    <!-- Pagination -->
+    <div class="panels-container" ng-if="c.isMultiplePage" style="display: flex; justify-content: center;">
+        <uib-pagination total-items="c.filteredCatalogItems.length" ng-model="c.data.currentPage"
+            ng-change="c.pageChanged()" items-per-page="c.data.itemsPerPage" max-size="c.data.maxPagesInPaginator"
+            boundary-links="c.data.showBoundaryLinks">
+        </uib-pagination>
+    </div>
+    <!-- Panel Footer -->
+    <div class="panel-footer">Total items found:
+        {{c.filteredCatalogItems.length}}<span class="copyright" ng-show="c.data.showCopyright">&copy; 2023 Ivan Betev</span></div>
+</div>]]></template>
+</sp_widget>
+</unload>
