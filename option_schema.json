@@ -3,7 +3,7 @@
     "hint": "Which catalog should this widget work with?",
     "name": "used_catalog",
     "section": "Data",
-    "default_value": "<%CATALOG_SYS_ID%>",
+    "default_value": "e0d08b13c3330100c8b837659bba8fb4",
     "label": "Used catalog",
     "type": "reference",
     "value": "sc_catalog",
