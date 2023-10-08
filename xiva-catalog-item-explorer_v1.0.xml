@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="UTF-8"?><unload unload_date="2023-10-08 09:26:49">
+<sys_remote_update_set action="INSERT_OR_UPDATE">
+<application display_value="Global">global</application>
+<application_name>Global</application_name>
+<application_scope>global</application_scope>
+<application_version/>
+<collisions/>
+<commit_date/>
+<deleted/>
+<description>Initial Release</description>
+<inserted/>
+<name>Catalog Item Explorer - v1.0</name>
+<origin_sys_id/>
+<parent display_value=""/>
+<release_date/>
+<remote_base_update_set display_value=""/>
+<remote_parent_id/>
+<remote_sys_id>dafeaf30c331b11071a57a0c05013181</remote_sys_id>
+<state>loaded</state>
+<summary/>
+<sys_class_name>sys_remote_update_set</sys_class_name>
+<sys_created_by>admin.biva</sys_created_by>
+<sys_created_on>2023-10-08 09:26:49</sys_created_on>
+<sys_id>4f2f6370c331b11071a57a0c05013164</sys_id>
+<sys_mod_count>0</sys_mod_count>
+<sys_updated_by>admin.biva</sys_updated_by>
+<sys_updated_on>2023-10-08 09:26:49</sys_updated_on>
+<update_set display_value=""/>
+<update_source display_value=""/>
+<updated/>
+</sys_remote_update_set>
+<sys_update_xml action="INSERT_OR_UPDATE">
+<action>INSERT_OR_UPDATE</action>
+<application display_value="Global">global</application>
+<category>customer</category>
+<comments/>
+<name>sp_widget_d0e60baf879861508009ac1a0cbb3593</name>
+<payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;record_update table="sp_widget"&gt;&lt;sp_widget action="INSERT_OR_UPDATE"&gt;&lt;category&gt;custom&lt;/category&gt;&lt;client_script&gt;&lt;![CDATA[api.controller = function ($scope, $window) {
+  /* widget controller */
+  var c = this;
+
+  /* Variable and Service Initizalization */
+  setWidgetState("initial", c.data.catalogCategories);
+
+  /* Function to be called when "Show All Items" has been clicked */
+  c.showAllItems = function () {
+    setWidgetState("initial", c.data.catalogCategories);
+    c.filteredCatalogItems = c.displayItems = c.data.catalogItems;
+    c.isShowAllSelected = true;
+    c.data.currentPage = resetCurrentPage();
+    c.isMultiplePage = checkMultiPage(c.filteredCatalogItems.length, c.data.itemsPerPage);
+  };
+
+  /* Function to be called when "Quick Search" is active */
+  c.quickSearch = function () {
+    if ($scope.searchText.length == 0) {
+      setWidgetState("initial", c.data.catalogCategories);
+      return;
+    }
+
+    setWidgetState("default-selected", c.data.catalogCategories);
+    c.data.currentPage = resetCurrentPage();
+    c.filteredCatalogItems = c.displayItems = $scope.searchText.length &gt; 0 ? quickSearch(c.data.catalogItems, $scope.searchText) : [];
+    c.isMultiplePage = checkMultiPage(c.filteredCatalogItems.length, c.data.itemsPerPage);
+  };
+
+  /* Function to be called when category letter has been clicked */
+  c.selectCategory = function (category) {
+    setWidgetState("default", c.data.catalogCategories);
+    category.selected = true;
+    c.data.currentPage = resetCurrentPage();
+    c.filteredCatalogItems = selectCategory(c.data.catalogItems, category);
+    c.isMultiplePage = checkMultiPage(c.filteredCatalogItems.length, c.data.itemsPerPage);
+    c.displayItems = calculateDisplayCatalogItems(c.filteredCatalogItems, c.data.currentPage, c.data.itemsPerPage);
+  };
+
+  /* Function to be called when reset button has been pressed*/
+  c.resetState = function () {
+    setWidgetState("initial", c.data.catalogCategories);
+  };
+
+  /* Function to make the whole row clickable */
+  c.openUrl = function (itemId) {
+    var fullLink = c.data.defaultCatalogLink + itemId;
+    $window.open(fullLink, "_blank");
+  };
+
+  /* Pagination */
+
+  /* Function to be called by the form element when another page has been selected */
+  c.pageChanged = function () {
+    c.displayItems = calculateDisplayCatalogItems(c.filteredCatalogItems, c.data.currentPage, c.data.itemsPerPage);
+  };
+
+  /* Functions */
+
+  /* If it is a quick seach then we are giving filtered array based on the condition */
+  function quickSearch(items, searchText) {
+    return items.filter(function (item) {
+      try {
+        /* First we need to check that values are not null, otherwise assign them with empty space to avoid app crash */
+        var itemName = item.name != null ? item.name.toLowerCase() : "";
+        var itemDescription = item.description != null ? item.description.toLowerCase() : "";
+
+        /* Return item if quick search text we placed in our input field is contained in the item name or description */
+        return (itemName).indexOf(searchText.toLowerCase()) != -1 || (itemDescription).indexOf(searchText.toLowerCase()) != -1;
+      } catch (error) {
+        console.log("Something went wrong while filtering searching by item name or description");
+      }
+    });
+  }
+
+  /* If it is a quick seach then we are giving filtered array based on the condition */
+  function selectCategory(items, category) {
+    return items.filter(function (item) {
+      return (item.name.toLowerCase()).substring(0, 1) == category.letter.toLowerCase();
+    });
+  }
+
+  /* Function to reset the category selection to default state (all are non-selected) */
+  function resetSelected(items) {
+    for (var i = 0; i &lt; items.length; i++) {
+      items[i].selected = false;
+    }
+    c.isShowAllSelected = false;
+  }
+
+  /* Function to reset quick search text in the input field */
+  function resetQuickSearchText() {
+    $scope.searchText = "";
+  }
+
+  /* Function that accumulates reset of selected category and quick search text */
+  function setWidgetState(state, items) {
+    /* Default state is intended to clear quick search text and reset category selection only */
+    if (state == "default") {
+      resetSelected(items);
+      resetQuickSearchText();
+
+      return c.data.msgDefaultState;
+    }
+
+    /* Default-Selected is intended to reset the category selection state only e.g. for All items category selection */
+    if (state == "default-selected") {
+      resetSelected(items);
+
+      return c.data.msgCategoryReset;
+    }
+
+    /* Initial is intended to bring the widget to the initial state same as after pager reload */
+    if (state == "initial") {
+      resetQuickSearchText();
+      resetSelected(items);
+      c.filteredCatalogItems = c.data.catalogItems;
+      c.displayItems = [];
+      c.isShowAllSelected = false;
+      c.isMultiplePage = false;
+
+      return "Initialization has completed";
+    }
+  }
+
+  /* Function to flag multipaging which is used by pagination to display page selector */
+  function checkMultiPage(itemsToDisplay, numOfPages) {
+    return Math.ceil(itemsToDisplay / numOfPages) &gt; 1 ? true : false;
+  }
+
+  /* Function to reset the current page to 1 everytime the category changes */
+  function resetCurrentPage() {
+    return 1;
+  }
+
+  /* Function to prepare the list of items to display based on the selected page */
+  function calculateDisplayCatalogItems(filteredItemsArray, currentPage, itemsPerPage) {
+    return filteredItemsArray.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  }
+
+  /* Debug - Logs */
+  if (c.data.isDebugEnabled) {
+    console.log(c);
+  }
+};]]&gt;&lt;/client_script&gt;&lt;controller_as&gt;c&lt;/controller_as&gt;&lt;css&gt;.category-header {    &amp;#13;
+    display: flex;&amp;#13;
+    justify-content: center;&amp;#13;
+    flex-wrap: wrap;    &amp;#13;
+    width: 100%;&amp;#13;
+    padding: 10px 0;&amp;#13;
+    margin: 0;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.catalog-category {&amp;#13;
+    font-size: 25px;&amp;#13;
+    font-weight: 600;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.category-letter:hover {&amp;#13;
+    transform: scale(1.4);&amp;#13;
+    border-radius: 10px;&amp;#13;
+    cursor: pointer;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.selected {&amp;#13;
+    transform: scale(1.4);&amp;#13;
+    background-color: #FFFFFF;&amp;#13;
+    color: darkgreen;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.list-inline {&amp;#13;
+    margin: 0;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.list-group-item:hover {&amp;#13;
+    background-color: #EEE;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.primary-display {&amp;#13;
+    color: #428BCA;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.main-column {&amp;#13;
+    cursor: pointer;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.panel-footer, .panel-heading {&amp;#13;
+  	height: 40px;&amp;#13;
+    display: flex;&amp;#13;
+    justify-content: space-between;&amp;#13;
+    align-items: center;&amp;#13;
+&amp;#13;
+    .copyright {&amp;#13;
+        align-self: center;&amp;#13;
+    }&amp;#13;
+}&amp;#13;
+&amp;#13;
+.xiva-quick-search-container {&amp;#13;
+    display: flex;&amp;#13;
+    flex-direction: row;&amp;#13;
+    justify-content: space-evenly;&amp;#13;
+    align-items: center;&amp;#13;
+    border-left: 1px solid #ccc;    &amp;#13;
+&amp;#13;
+    .fa-search::before {&amp;#13;
+        padding-right: 1rem;        &amp;#13;
+    }&amp;#13;
+}&lt;/css&gt;&lt;data_table&gt;sp_instance&lt;/data_table&gt;&lt;demo_data/&gt;&lt;description&gt;Full list of items split by first letter category&lt;/description&gt;&lt;docs/&gt;&lt;field_list/&gt;&lt;has_preview&gt;false&lt;/has_preview&gt;&lt;id&gt;xiva-catalog-item-explorer&lt;/id&gt;&lt;internal&gt;false&lt;/internal&gt;&lt;link&gt;&lt;![CDATA[function link(scope, element, attrs, controller) {  }]]&gt;&lt;/link&gt;&lt;name&gt;Catalog Item Explorer&lt;/name&gt;&lt;option_schema&gt;[{&amp;#13;
+    "displayValue": "Catalog",&amp;#13;
+    "hint": "Which catalog should this widget work with?",&amp;#13;
+    "name": "used_catalog",&amp;#13;
+    "section": "Data",&amp;#13;
+    "default_value": "e0d08b13c3330100c8b837659bba8fb4",&amp;#13;
+    "label": "Used catalog",&amp;#13;
+    "type": "reference",&amp;#13;
+    "value": "sc_catalog",&amp;#13;
+    "ed": {&amp;#13;
+        "reference": "sc_catalog"&amp;#13;
+    }&amp;#13;
+}, {&amp;#13;
+    "hint": "How many items should be displayed per page?",&amp;#13;
+    "name": "items_per_page",&amp;#13;
+    "section": "Presentation",&amp;#13;
+    "default_value": "10",&amp;#13;
+    "label": "Items per page",&amp;#13;
+    "type": "integer"&amp;#13;
+}, {&amp;#13;
+    "hint": "How should All Items category be called?",&amp;#13;
+    "name": "show_all_items_category_label",&amp;#13;
+    "section": "Presentation",&amp;#13;
+    "default_value": "All",&amp;#13;
+    "label": "Show All Items category label",&amp;#13;
+    "type": "string"&amp;#13;
+}, {&amp;#13;
+    "hint": "Should debug logging be enabled?",&amp;#13;
+    "name": "is_debug_mode_on",&amp;#13;
+    "section": "other",&amp;#13;
+    "default_value": "false",&amp;#13;
+    "label": "Enable Debug",&amp;#13;
+    "type": "boolean"&amp;#13;
+}, {&amp;#13;
+    "hint": "What link should the widget use to redirect to the catalog item?",&amp;#13;
+    "name": "default_item_link",&amp;#13;
+    "section": "Behavior",&amp;#13;
+    "default_value": "?id=sc_cat_item&amp;amp;sys_id=",&amp;#13;
+    "label": "Default link to the catalog item",&amp;#13;
+    "type": "string"&amp;#13;
+}, {&amp;#13;
+    "hint": "How many pages should be displayed in paginator at once?",&amp;#13;
+    "name": "max_pages_in_paginator",&amp;#13;
+    "section": "Presentation",&amp;#13;
+    "default_value": "4",&amp;#13;
+    "label": "Maximum pages in the pagination component",&amp;#13;
+    "type": "integer"&amp;#13;
+}, {&amp;#13;
+    "hint": "Should the First/Last links be displayed in the paginator?",&amp;#13;
+    "name": "show_boundary_links_in_paginator",&amp;#13;
+    "section": "Presentation",&amp;#13;
+    "default_value": "false",&amp;#13;
+    "label": "Show boundary links in the pagination component",&amp;#13;
+    "type": "boolean"&amp;#13;
+}, {&amp;#13;
+    "hint": "What text should be used for Quick Search field as a placeholder?",&amp;#13;
+    "name": "quick_search_placeholder",&amp;#13;
+    "section": "Presentation",&amp;#13;
+    "default_value": "Quick search...",&amp;#13;
+    "label": "Quick Search placeholder message",&amp;#13;
+    "type": "string"&amp;#13;
+}, {&amp;#13;
+    "hint": "What title should this widget have?",&amp;#13;
+    "name": "widget_title",&amp;#13;
+    "section": "Presentation",&amp;#13;
+    "default_value": "Catalog Item Explorer",&amp;#13;
+    "label": "Widget Title",&amp;#13;
+    "type": "string"&amp;#13;
+}, {&amp;#13;
+    "hint": "Display copyright in the right bottom corner",&amp;#13;
+    "name": "show_copyright",&amp;#13;
+    "section": "Presentation",&amp;#13;
+    "default_value": "false",&amp;#13;
+    "label": "Show Copyright",&amp;#13;
+    "type": "boolean"&amp;#13;
+}]&lt;/option_schema&gt;&lt;public&gt;false&lt;/public&gt;&lt;roles/&gt;&lt;script&gt;&lt;![CDATA[(function () {
+
+    /* Configuration */
+    data.isDebugEnabled = (options.is_debug_mode_on === "true");
+    data.showCopyright = options.show_copyright === "true" || false;
+    data.showAllMsg = gs.getMessage(options.show_all_items_category_label) || gs.getMessage("All");
+    data.defaultCatalogLink = options.default_item_link ||"?id=sc_cat_item&amp;sys_id=";
+    data.itemsPerPage = $sp.getParameter("items_per_page") || options.items_per_page || 10;
+    data.maxPagesInPaginator = options.max_pages_in_paginator || 4;
+    data.showBoundaryLinks = (options.show_boundary_links_in_paginator === "true") || false;
+    data.widgetTitle = options.widget_title || "Catalog Item Explorer";
+
+    /* Used to set the default first page for the pagination */
+    data.currentPage = 1;    
+
+    /* Messages */
+    data.showAllMsg = gs.getMessage(options.show_all_items_category_label) || gs.getMessage("All");
+    data.msgQuickSearchPlaceholder = gs.getMessage(options.quick_search_placeholder);
+    data.msgDefaultState = gs.getMessage("Widget fields were set back to default");
+    data.msgCategoryReset = gs.getMessage("Category selection was reset");
+
+    /* Get Catalog ID */
+    var catalogsId = $sp.getParameter("used_catalog") || options.used_catalog;
+
+    /* Get all catalog items */
+    var catalogItems = new GlideRecordSecure('sc_cat_item');
+    catalogItems.addQuery('sc_catalogs', 'LIKE', catalogsId);
+    catalogItems.addQuery('active', true);
+    catalogItems.orderBy('name');
+    catalogItems.query();
+
+    /* Save all sys_ids and names of catalog items to an array */
+    data.catalogItems = [];
+
+    while (catalogItems.next()) {
+        if (!$sp.canReadRecord("sc_cat_item", catalogItems.sys_id.getDisplayValue())) {
+            continue;
+        }
+
+        data.catalogItems.push({
+            itemId: catalogItems.getValue('sys_id').toString(),
+            name: catalogItems.getValue('name'),
+            description: catalogItems.getValue('short_description')
+        });
+    }
+
+    /* Get first letters to generate categories */
+    data.catalogCategories = getUniqueFirstLetters(data.catalogItems);
+
+    function getUniqueFirstLetters(strings) {
+        /* Create an empty array to store the first letters */
+        var firstLetters = [];
+
+        /* Iterate over the input array of strings */
+        for (var i = 0; i &lt; strings.length; i++) {
+            /* Get the first letter of the current string */
+            var firstLetter = strings[i].name.charAt(0);
+            var exists = false;
+
+            /* Check if the letter already exists in the array */
+            for (var j = 0; j &lt; firstLetters.length; j++) {
+                if (firstLetters[j].letter === firstLetter.toUpperCase()) {
+                    exists = true;
+                    break;
+                }
+            }
+
+            /* Check if the first letter already exist in the array */
+            if (!exists) {
+                /* If not add it */ 
+                firstLetters.push({
+                    letter: firstLetter,
+                    selected: false
+                });
+            }
+        }
+
+        /* Sort the array of objects, otherwise the simplier version of sort might be used */
+        firstLetters.sort(function (a, b) {
+            return a.letter.localeCompare(b.letter);
+        });
+
+        /* Return the sorted array of unique first letters */
+        return firstLetters;
+    }
+})();]]&gt;&lt;/script&gt;&lt;servicenow&gt;false&lt;/servicenow&gt;&lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;&lt;sys_created_by&gt;admin.biva&lt;/sys_created_by&gt;&lt;sys_created_on&gt;2023-01-16 09:48:44&lt;/sys_created_on&gt;&lt;sys_customer_update&gt;false&lt;/sys_customer_update&gt;&lt;sys_id&gt;d0e60baf879861508009ac1a0cbb3593&lt;/sys_id&gt;&lt;sys_mod_count&gt;998&lt;/sys_mod_count&gt;&lt;sys_name&gt;Catalog Item Explorer&lt;/sys_name&gt;&lt;sys_package display_value="Global" source="global"&gt;global&lt;/sys_package&gt;&lt;sys_policy/&gt;&lt;sys_replace_on_upgrade&gt;false&lt;/sys_replace_on_upgrade&gt;&lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;&lt;sys_update_name&gt;sp_widget_d0e60baf879861508009ac1a0cbb3593&lt;/sys_update_name&gt;&lt;sys_updated_by&gt;admin.biva&lt;/sys_updated_by&gt;&lt;sys_updated_on&gt;2023-10-08 08:58:15&lt;/sys_updated_on&gt;&lt;template&gt;&lt;![CDATA[&lt;div class="panel panel-default b"&gt;
+    &lt;!-- Panel Heading --&gt;
+    &lt;div class="panel-heading"&gt;
+        &lt;div&gt;&lt;h2 class="panel-title"&gt;{{::c.data.widgetTitle}}&lt;/h2&gt;&lt;/div&gt;
+        &lt;div&gt;&lt;button ng-if="c.filteredCatalogItems.length &gt; 0" type="button"
+            class="btn btn-primary btn-xs" ng-click="c.showAllItems()"&gt;{{::c.data.showAllMsg}}&lt;/button&gt;
+            &lt;button ng-if="c.displayItems.length &gt; 0" type="button"
+                class="btn btn-danger btn-xs hidden-xs" ng-click="c.resetState()"&gt;Reset&lt;/button&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;!-- Panel Body --&gt;
+    &lt;div class="panels-container"&gt;
+        &lt;div class="row category-header fit-content"&gt;
+            &lt;!-- Catalog Category Letters --&gt;
+            &lt;div class="col-lg-8 col-md-8 col-sm-12 col-xs-12"&gt;
+                &lt;ul class="list-inline text-center"&gt;
+                    &lt;li class="list-inline-item" ng-repeat="category in c.data.catalogCategories"&gt;
+                        &lt;div class="category-letter" item="category" ng-class="{'selected' : category.selected}"
+                            ng-click="c.selectCategory(category)"&gt;&lt;span
+                                class="catalog-category"&gt;{{category.letter}}&lt;/span&gt;
+                        &lt;/div&gt;
+                    &lt;/li&gt;                    
+                &lt;/ul&gt;
+            &lt;/div&gt;
+            &lt;!-- Quick Search Section --&gt;
+            &lt;div class="xiva-quick-search-container col-lg-4 col-md-4 hidden-sm hidden-xs"&gt;
+                &lt;span class="fa fa-search"&gt;&lt;/span&gt;&lt;input class="form-control" type="text"
+                    ng-model="searchText" ng-change="c.quickSearch()"
+                    placeholder="{{c.data.msgQuickSearchPlaceholder}}"&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;!-- Item List --&gt;
+    &lt;ul role="rowgroup" class="list-group padder-l-none padder-r-none"&gt;
+        &lt;li class="list-group-item" ng-repeat="item in c.displayItems | limitTo:c.data.itemsPerPage" style="margin:0;"
+            ng-click="c.openUrl(item.itemId)"&gt;
+            &lt;div role="cell" class="padder-l-none padder-r-none main-column"&gt;
+                &lt;div class="primary-display"&gt;
+                    {{item.name}}
+                &lt;/div&gt;
+                &lt;small class="text-muted"&gt;
+                    &lt;div class="secondary-display"&gt;
+                        &lt;span&gt;{{item.description}}&lt;/span&gt;
+                    &lt;/div&gt;
+                &lt;/small&gt;
+            &lt;/div&gt;
+        &lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;!-- Pagination --&gt;
+    &lt;div class="panels-container" ng-if="c.isMultiplePage" style="display: flex; justify-content: center;"&gt;
+        &lt;uib-pagination total-items="c.filteredCatalogItems.length" ng-model="c.data.currentPage"
+            ng-change="c.pageChanged()" items-per-page="c.data.itemsPerPage" max-size="c.data.maxPagesInPaginator"
+            boundary-links="c.data.showBoundaryLinks"&gt;
+        &lt;/uib-pagination&gt;
+    &lt;/div&gt;
+    &lt;!-- Panel Footer --&gt;
+    &lt;div class="panel-footer"&gt;Total items found:
+        {{c.filteredCatalogItems.length}}&lt;span class="copyright" ng-show="c.data.showCopyright"&gt;&amp;copy; 2023 Ivan Betev&lt;/span&gt;&lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;&lt;/sp_widget&gt;&lt;/record_update&gt;</payload>
+<payload_hash>584213465</payload_hash>
+<remote_update_set display_value="Catalog Item Explorer - v1.0">4f2f6370c331b11071a57a0c05013164</remote_update_set>
+<replace_on_upgrade>false</replace_on_upgrade>
+<sys_created_by>admin.biva</sys_created_by>
+<sys_created_on>2023-10-08 09:26:49</sys_created_on>
+<sys_id>832f6370c331b11071a57a0c05013165</sys_id>
+<sys_mod_count>0</sys_mod_count>
+<sys_recorded_at>18b0e9c24260000001</sys_recorded_at>
+<sys_updated_by>admin.biva</sys_updated_by>
+<sys_updated_on>2023-10-08 09:26:49</sys_updated_on>
+<table/>
+<target_name>Catalog Item Explorer</target_name>
+<type>Widget</type>
+<update_domain/>
+<update_guid>f71faf304c31b110ebd3bb48df2c4d8d</update_guid>
+<update_guid_history>f71faf304c31b110ebd3bb48df2c4d8d:584213465,f8a8af3878fd7110c9e150b0c8805389:584213465,f9e7237807fd7110503b6679ca3b11bf:1321137471,2c56a7f48ffd711027f0fcef979836a0:1841055722,3316afb468fd71105f27fcb91b3e7ddc:-827308326,94b5a7b409fd7110af529cb2bdd14b80:801372323,28a52f745efd71106b4d99e0ae9763a4:1404252277,97452bb498fd711054b27f42d1b0e66e:-805482637,77d4af7468fd71100e20c7cda7540926:1269338121,8944a77428fd71107a23f496b591c9b7:-1279601037,cc04277429fd7110e763a37e10a23fdb:-1989816905,c1e3277434fd7110c5ab7996bf7020d5:-414858598,9a83af34acfd7110e8babf07cccd9bf4:-1605651755,4283af34d2fd7110ee5724f2e6a4b0db:145931909,ca832b3404fd7110bd22e1e20d15416c:-102486244,ca83af34cbfd7110ff0496951a3dc2aa:688617544,5d6123f053fd71102ed80dee6363cb76:-1929150918,5ef0abb089fd7110af6577b71dde1121:337664621,aee06bb02dfd7110566382856c5fbb4e:-1378589672,75e027b0aafd71100f8d1c88b0e49fdc:337664621,51e02bb065fd7110c077dd9690510827:770981531,95d06b700afd7110ebf93045e047d572:1059580837,25c0a7b05dfd7110af1f928ed1197ff9:-1378589672,3a5023b05dfd711043ca63cea7cd7fc1:-610249259,9e7f137043fd7110a543dc61b5c97de1:718177804,4d1f9b3004fd7110f6374469116515db:-1221300779,fb4e9ffc45bd7110b83fda29a93e5ce0:-1197483169,893e9ffcddbd7110b9705a92d015c69f:-1927166497,432e9ffc35bd7110fdc3a98e8ab1aadc:-788169882,effd53fc45bd7110d04d02dbd204c22d:1929042140,22fc5bbc43bd7110df8b0fc38335f123:-1902809636,47ec5bbc79bd711053294cc93fbbc53b:-2072980516,79bc5bbcddbd7110a6309a4be1786e07:-1812276837,237c97bc07bd7110ad4f0ac2b9507a73:2082862391,b1fb9f7c95bd711052f3f8a06b9b7496:203363989,0dbb1b7ccbbd71108110c8de69962e35:-1243065771,6a3b937862bd7110f6f710e3d108822a:1603452500,72aa1b3848bd7110d778caa8a561e88d:-1803769615,954c0275a891a910f42d6bda1b089b40:1166115323,df8b0af14191a910484195335d097c64:360536955,4b048ed5751d6510737e8135216c0246:-1088032965,6dd5b9d568d96510c63dc9579fc79bf0:1591719524,5ae33c8faf702910a6a8a2689fa5aa84:-1266165565,31b1d6763eb0e510c9629b977267af87:-1222964982,35915276a1b0e5108b5d924ee76fa713:1375701729,00915e363eb0e510227a303e32eabd0e:-2014659964,09519e362ab0e5108da092571945e960:-1076326908,bc11523666b0e51043bf1bcdcb219a26:-1033478223,08c052366ab0e5101a16645dd855591e:1256924193,e9a056f294b0e5102f3bb0f95cb9d834:2059534411,00905af2e2b0e51089d2a51a3a09a7e8:-898319349,908056f2a9b0e5103c833d30cedcc42e:683542667,22705af2a7b0e51053009caec4970ce2:-1002056945,f6ef0ab21bb0e5102e447cba2f21d71d:-1752507765,1b6e0a3215b0e5103304b7f690596f2e:-361242088,714ec23299b0e510602d902582513091:2035286408,582ecafec270e5104424b8ec81112bb6:1408233423,b21ec6fef170e5107ac930a35ab32b4c:51052257,e9ed4afedf70e510e66e60aacdaa2be5:202973563,79dd02fe4f70e5103a187753a823b902:-1354979373,13cdcebe4f70e510a1f630c0059fdbdf:493305236,29cd02fe4f70e51092daa9e136b1c1bb:-119032811,dd8d02fed370e510f60c5e21ca0f73b5:1828824241,026d0abeda70e5103d516474186cff6f:790647240,705dc27e5570e510359d1a8efe369fa7:-432096104,833d0abec370e5106b9abe53d306a567:-1484192666,592d46bef470e5106f5003792c0297d4:-457964676,eb1dce7e4b70e51087c05373f27aa724:1854130634,cadc8a7e7870e510c29c6f8666e89b08:-361792210,fd7cc27e9570e51013412d8bff636454:-1057506203,c97c067ec470e5105ea2cc79e7f8db30:-574171918,2c6c427eb170e5103f39559659994f7c:1187333248,f65cca3ebe70e510c3ba367bf74f4009:-1032670384,833c4e3e1f70e51092d7d3b2db49ed28:-1057506203,793c0a3eb870e510d817d37556f25b79:256386451,e91c423e6770e510859bf5b06a8d49c1:-14410685,7b0c0a3e6870e510c10d9cd913429873:699537944,210c0a3e1670e510050f0972988e696f:-14410685,42fb023ef870e510a2bf93ef3e6003a3:14898160,04eb4efae570e510d6589789d949e448:706012875,be9b8efa2470e510604524dd9d84b3aa:159387293,278bc6fac170e510e6ea2c4eeab8a0e9:-129094686,b17bc6faf970e51066eb2ab2c91989e2:-811688786,225b02fa9170e510b4f1d46da7bb2bfe:1039135022,c85b06fa1170e510a4d3b1c86fdedddf:-1951242875,92ca0aba3c70e51006fbd4f8826dbd0c:1749399452,a5ba0aba6670e510bc1559fd6cd2356c:766097920,e22ac67a2d70e510156611a4994e06dd:159387293,4a0ac27a1d70e510939566549788aa0d:-1457903905,ab994a3a6170e51009c6f349b9da89d3:-1179450756,1fc10c365934a5103d107146e884d01d:2049748898,f8e63beea6b0a51098c124992e79e2e0:-1126355257,0b16b7aee6b0a510afb4da4f32b361d6:-51022876,141637ae3db0a510c90331b8629f9dc3:1494057771,9006fbae06b0a5105a9e1a6f1d576b58:323217313,6dd5bf6eadb0a51083bf9b8d3cfc9f4e:1069202350,52b5bf6eb6b0a5107d66324ee2aed857:-2022546836,b3a5bf6e9bb0a51064878b09f093ea49:841103336,f4a5fb6e08b0a51023669104b311d719:2107043170,7665b76e22b0a510c0032631af4abc9b:940313828,eb253bea65b0a5107be976ccdcf2dbbd:1567372777,072a935d68742550b31034809a54372e:1307459766,9ad9dfd9657425504631e0c884e1fdc8:1214219058,b139131db67425507cf426cf0d2a488c:1307459766,9929131d6a7425502e5e65b791e7e487:1284149589,2c299f99e97425503e001a37d2a08bec:1307459766,37f89f99d874255010de115a1e7404f9:74980073,2df89f996d742550b859b8dddc24daf4:1399954603,c0c8d3d92674255080d0bdb9fbe6b26a:1809156372,2a28d399c97425506cb312c98f3003fa:1549299703,68d7d759337425507b57d73c39c34b41:-323348366,560c4c5118b0e150c32cd7caba73cddb:-582167477,1bdb48d1cfb0e150f0064333353f12de:609225487,186b48d18fb0e150498677e85db2372e:604497723,e64b04dd7370e1504e2ecda1bfff8738:-1041085665,7f3a8451afb0e150cad5c23ccc9404d6:-740381119,a1f948114eb0e1504c9094662f209b56:2146963526,d7c9c45d1370e150335b8ff07f0b61b5:3057030,8a69081195b0e1507a4c69c07539c8cb:609225487,12e80cddf970e1503d43f209c5b1bdb1:-275398328,7b58409d0b70e150a27b537e87c6f85f:1479615012,4cc74c1d0c70e15087a4bcc7c686cdb2:891379432,9da7c05d0c70e150d3a9eda3d3de826e:-687379779,e9374c1dca70e1502d7559d94f5f30ac:-275398328,faf64c1d3070e150d4d3af34d5d2956b:-1060442920,8ea7070d6df8a15000d5ce474a471e96:-1722624920,c0974b0dd5f8a15025ee6eaeae1d2ec0:76809735,1787830d3ef8a150f78b9d20a684fe0f:-1756904539,ba67070d88f8a1503482efe91d0e09b4:1387068155,ef57070d1ff8a150dc7f47e943bc6c90:-765630601,53474bc9f9f8a1509ce3bf249fe34b81:-1666633135,8337830d4ef8a1503b4076c466bb2407:1363794355,5ea643c966f8a15020bc51a38f30a784:-1958126768,b1768b899ff8a1507dd3886442989c2f:621365169,53168389f7f8a150ea08a369ff1a39fc:-1520332389,00f5cf4971f8a150b9cac8931a157964:666970826,12e5474993f8a1505589db6b766e48a4:-1520332389,96f48309eaf8a15008c890c28c7c869a:920202214,897487c594f8a1508376ad01c34b53e2:-296546695,f7938f45bff8a150fe9738ba56396c4f:-1701393223,2e734b458ef8a1508d41b1db959bdb8d:1662990457,1e634b4534f8a1501f7b8f221ad1c11e:-19201383,984ff2cd78b8a150657a77371d4f4005:-1701393223,0cfe3e8d21b8a150bd3f79653daa45e7:559766528,5eee728d56b8a15092d2492929e22235:1570159912,7ade3e8da5b8a150bdb48b764f5bbfe1:1572346784,789ef64d18b8a150f304970b5eacedf9:434123504,566efa4d6bb8a150a13acc6c9c35d9c6:1572346784,974efa4d6bb8a150782856ae2342dbc0:-1315690325,46fd764d8cb8a15087ca84dadc3d7e92:2146189305,56edbe0d1fb8a1500915b95ac172a666:629376346,d69dbe0dc7b8a150a1d0c7231b2f105f:-1413854457,b98d3ec9fdb8a150d2b17704a378fb22:-1270168135,8c5dfec9feb8a1509645638f609ce21a:592225401,27fcfec9adb8a150b4eeca43b98f3310:-863134214,efecbac93fb8a1501bf29c014c8170db:-1501862676,18dcb2c956b8a1500f4e1ef485c35b8f:-13564554,eeac7a89f0b8a150f9982d3e943110f8:351456757,538c76c922b8a150a4e115ea0e74cf7f:437566218,4b7cbe89c0b8a1509422a2cf6e1dbb86:-1418122920,295c7e8978b8a150449f951aec24b474:-1489803306,b44cb28993b8a150dfd7dcfa58c0cd01:-807222146,00bbbe4975b8a150490c00250acd12e7:2014255735,a77b7a4966b8a15022ffead950c23722:-1965197512,ba5bb64994b8a150eba3b106797bf2fe:-513812722,e7da3a09f1b8a150051e0635c89806f5:-1795743382,8ada3a095db8a1507851c168583343f0:-706469064,35ca36098eb8a150a916116ae62b8bc7:-1822720513,78cab609a3b8a1507223394fc6d6813e:-1436413647,0ccab6099ab8a15055679bc1325bff39:-1560597853,ca6a76c557b8a15008ea174c7906343d:156577106,1a4a76c53bb8a150d7c323c9adaa3c2e:-1921449643,4d1ab2853db8a150e87d77fc9b4bd568:408260171,1db93a85a2b8a150e2a9cf57e29826a7:568636885,75caec549af06d101b6f001366d1012c:408260171,2e7aa094f0f06d106633923ee76a6d5f:305585547,d13aec5430f06d10d5f570b7074c1325:1474935596,dbf96854a2f06d101c8d6f1931420e6b:-821037541,06e92054dbf06d10bb6fc05f85875d8e:314398630,8679e81485f06d1084f306ca196ece79:-951067482,4559a8d0ecf06d10d62f2336b87fe58c:-724670712,bee868d00af06d101d8015e2bae3e722:-1936022901,bc18a090f8f06d103e9ba73fb08e9a24:-65507680,880864908cf06d10ce24c49d5e059d26:-1457143744,bcc7a090f9f06d10598de3274047391e:-567580746,da77a850fff06d101b784176389c0c65:1841346560,ab966410f6f06d101e8b94d23a304d1e:-1693498898,6c95649cd0b06d100a6efaf149c94053:-1057176773,2475649c7ab06d104fcc92136e9b4fb5:-1788619305,7d05e85c34b06d1060ed3b0bcfdb962c:-1697921972,b6e4e85c2ab06d10a547f24959cac024:-107759102,dcc4245cb6b06d10fe8e35a21b8b4a35:-49574601,78a4281c18b06d10a11297dcb71c5a0a:-707122583,28a4605c27b06d104bdde6ceb4a3e21a:-2019626458,6e7364d8ccb06d10551f448114323842:727845431,9e63a4d827b06d10a3ce71bf16c8b2bf:-184514095,7792e05833b06d1098cfac849129542a:858241461,0e82e45863b06d10ef0ef746dc86c94c:1705852118,6d22a05863b06d108fe4ff86aa76f94a:1651008059,63f16c1885b06d10645f9535e0e1081b:-1657032597,ef71e418e3b06d10fcdb04a4cbd74270:571037320,5d31a4d46eb06d109e44e25867d1e268:709564232,5d706c94e6b06d10a0e53742aa2d30e3:1070412273,7e3fdc14a2b06d10d97bd78c2c131544:-429315178,231f98d046b06d10c14931d4d668daf0:1705852118,5c1f98d050b06d10f157a901f411539a:-714419798,c7ce18d076b06d108da98877222d8f2e:1705852118,2f7d985050b06d10886bba60ab3964b9:632166467,333d585010b06d10ea031aaf6843be3e:1345984040,c2dcd81086b06d10b7c85fe747ce8f72:1186763443,60ac98dcb9706d10090e34268766e892:-1085246477,48cbd89c3d706d105d7531f15d4cb912:1705852118,718bd89c3d706d107efe91f40fedb90c:-429315178,6428105890706d10365231986ed73903:106348162,9cf714181e706d10d865018c7c9c382d:-202088807,b6e7d418b4706d1083706a963357988e:-1501704695,c2c458d0e8706d10d844591dcaaf52ec:-289610478,f69418d0b1706d1010142f1e4d9f3f4d:-797041614,da5410d06e706d1070c5dffbd80f0526:511445381,6b24d49040706d102167c78356c8d0e9:-1993866428,7a24989063706d10483f9075b5dedc60:77808328,cd245c9075706d10697350222f624b83:739622921,6414d890b5706d107f60434fc17cf9d0:8773749,1a04d09094706d10b7c248eba0c7a8ae:981887614,15041890f2706d10eae77b448383dca2:675400979,08f3189061706d10b00d2b5c1d0ca79b:-436263246,97d39c505b706d1070a0c917740d90d4:526297970,98d39c509f706d10b9744ac66e5baacf:-708225454,b5a39c50b7706d101bb0f8a2df44cc1a:-1061508512,57739c5073706d105d008bcdbbcc9b12:-1748928426,b753d050a7706d10027aa34de80bbc2a:2034377766,cfb254100f706d1099fabbfbb337fa7f:-1061508512,3c0254dc86306d10c82c0e8c45ccfa39:749428760,75a1dc9c09306d10553a10daf387c5b8:-1298651494,6f91d89ccd306d104a70cc7d444560be:-671728099,4361509cd6306d104204a72ae861af1f:-1061508512,a601185c09306d100a3642b8a96a82ba:-1903865833,dbf0585c2a306d10b2a7dd4f3b939b28:-382260223,e9e05c5cef306d107752e3ed54ea871c:1205135971,3eb0585c35306d107f3e6fa66e0e4020:290219031,79b0185c54306d10f9f7ddf6db6e171a:1703914042,d7401c1c62306d102a8bef11e3d16abb:1485953426,08ff001cf1306d1064fd4263b5db42d9:744401042,523ec458c1306d1039490cfbf887bf01:2136773786,a0fd4818be306d100577cf631b0331df:-1722469857,47cd0c18b2306d10b8d9903c34464912:1595023341,dabd48189b306d106a80a00a650335d7:1861595349,7c2cc0543b306d100e31b4649ab2ba04:-1041471234,2cfac014cc306d10b38a15109fedf3eb:-963667843,22ea8cd0d0306d109e119daca9c7cd76:-362337441,1e9a489096306d107b6aa770a6db6d9f:1314198623,0a7ac4d029306d101343596f2e1bd6ee:-287063683,764a80d0d9306d10743850756dfdbd7d:2116486328,a91ac890b2306d1012ecd0c367009872:589996189,cff988900c306d103364ecb1335668ce:-1576391174,d5d90490e3306d10b164c01b332c3403:808414447,b5c9c09090306d10f5488a662b798f7b:-1467685567,f6b9049033306d1034c1052d0ee0983f:1190032332,5eb9045cd1fc2d1062a0ca32407b5d04:-119826934,3079089c36fc2d10e19b4e72b17e1446:425776050,38f84c1019306d10ebe3172023e8034b:1026610667,1ed84c1062306d10f1749170deaee946:-1352462666,c6c884108c306d1020235c6da0f91b4f:-825385874,92f7cc9cdcfc2d10e91ffe78dce70737:1197638901,8867409c5bfc2d10005042f57454692c:739003382,1c57c49c96fc2d105bb39d2208cbc3ae:-2081515663,5e47cc5c28fc2d10c8d026ee908a8c95:-960249102,4c47c49c0efc2d1046e85dd298c8dfa8:-1891416715,ff37885c0cfc2d108f0f60c8a8ddbaad:1482178738,b876045c09fc2d10c428d0e1f4b5ad55:-592565606,fbe5041c54fc2d109b4440cc30e1d005:-555194186,dfd5041c4ffc2d10afa969d4e00f1700:1428284782,abb5c4d8a4fc2d10ae5e6a6709e9a84a:-555194186,ac240858ecfc2d1074646faab7b08b2f:203416113,cdb38c189cfc2d10f5ce50012cb02e8e:-757541881,e1a30418c5fc2d10b0cccb00c2bc396f:327931087,1b13ccd46dfc2d1065fd8e8fe492dc1e:-147901647,c9920894ddfc2d1020168b3f1e94db00:327931087,c3e1c094c6fc2d10cce208c435a6e078:-207399278,b1918854c3fc2d109e41a2ee014305a0:-568634821,f3410c1449fc2d10971d3e13dab38c12:-821671106,dd21cc1427fc2d1006f314648d276a8c:916781705,f2f0081430fc2d103bde5f6d70a15a39:-378725584,f2c000144dfc2d10516c83af2a5a271f:-858970265,70808c9002fc2d10e53ae5ccf544cb73:-1254475564,70704cd0affc2d10df0507450e4d846e:312268466,ad6084d0fffc2d10bb06e66b9f79d920:-1106826129,f44084d0a8fc2d106e6e55f7bb8c8559:2117923631,d22004d0d4fc2d101377216876c54dca:121842327,d92084d02bfc2d10d34f112aa8e57a54:1562797717,782084d000fc2d104ad210d7b4c2c817:1638314835,53ef3b80c1fc2d10cc9d0b77894df216:1562797717,52dff780fafc2d10975caa4d160ba896:-97999653,f2af7b8024fc2d1036a339c6060cf799:367352444,cf9fbf4074fc2d10129a67489033f820:810603384,607fb38029fc2d10c328fdf327accfab:1522586486,7c3fbf40eefc2d10fe107d0369749130:-1576935537,7a2fb74087fc2d102599b6971ec8487f:-330067414,57feb740d1fc2d103665a7e31b08f378:-1576935537,0feefb003efc2d1036d55a0a223da2be:582082453,a4cef34007fc2d10e82e7ad09808084f:-1835886850,0fbebf00c7fc2d102b54d23a10678d06:-1612673625,d95e3b0009fc2d10df1f6dee2e6a8413:-1902185875,474efbcc56bc2d10ac985238d769ccaf:-1383460964,c3edb3cc99bc2d10600afa632980a004:816133798,62ddfbcc6bbc2d100924a104f17725a5:927535722,84bd73cc83bc2d10dd34a44376b15cff:905752849,95ab3bc8e3bc2d10fddd91c59548ff57:1335892147,854bbbc883bc2d10cfce5419d3cedd32:905752849,742bb388e1bc2d109f2953ea3e3100c5:-1580698603,91ba3b88f5bc2d10714fad0ba4cce0ba:1247117656,bcba3788bdbc2d10190fa55e253ef107:267259513,c2aa3b88ddbc2d1008c8d2f2d04991b4:-1769158082,d19a3788f4bc2d105bfab3443c0a0b37:-123549387,937a3788b1bc2d10ee4557de005ee131:-1580410757,0b7a378892bc2d10e948d2538b4a6b00:1813314375,ad0a3748e3bc2d10abddcf0556d7825f:-123549387,47a77744b0bc2d107f3b237b66be8185:-1580410757,69a77f44e2bc2d10ad2e82c4e600c399:1989201713,5c973b44babc2d10536375d59ef19309:-773925373,5f77f304d3bc2d103777993feec9a41c:177848040,44573344cfbc2d10d3af70bb6bdf9b3a:802629956,4237f34403bc2d10ca105dc7eaba6e4e:177848040,79273344ddbc2d1091ac745f5189b735:-881636936,7e1733448dbc2d100597ad6b1ab7e32f:2041482521,b707fb044bbc2d104ef4668cbd3372e3:16262064,f2077f048abc2d108bf914057b772ae9:1974018065,a9f6fb046dbc2d10caae4b1650ecf3de:-1801269864,fae6b30464bc2d10712211040c2d96d0:940422946,f2d57f80edbc2d104ba8330ff71b6c21:-1816499551,15c5bf802dbc2d107419b14ab52539d0:-1539251221,d5f3fbcc137c2d107a3ffe5c1781767f:-154051634,0bb3fbcc8d7c2d10eefcd734df553b78:2083697068,26a333cc997c2d1024bf2a1554e75a84:-1194038963,df6da3445f7c2d10827e0fc0777bbdfd:-1171282899,df7cafc0e57c2d107a8c44252827c3c3:1907754192,3c4ae700bd7c2d10aa3c387e2154b3da:606494144,c4b86f4c773c2d10818d69e408a22183:372434713,c2136b448b3c2d10ba44bacf8d02bf19:-268453135,b0036744e23c2d1001982e799f868056:1284104446,35d167c0313c2d100335ee447f55bc39:-172704305,b0ffdb00643c2d10e09630be73249253:-1175752719,f16f9bccd8f82d1006fa811609a7eb3b:-1709234712,705fdbcc5ff82d1095170a0c9f740df8:-159122397,9b8c9388bef82d10a2827730e5cfa0e5:1826910178,391cd38865f82d1084806354074cc22a:1219531969,5deb97485bf82d10879014aee6156572:372105282,b0eb9f48b9f82d1009f89380758c1271:1617687372,798b9f082ef82d105846655b0e6edb0d:-601638590,4b4b5f0829f82d103d3cb32f1c11421e:1450720912,abcad30872f82d10c2ba6dc053333d56:1794595456,07aa53c4def82d106d87d5472a7f1b8b:1041774198,f22ad3c406f82d10f4b349543ed94bd6:-836992372,4e2ad3c463f82d10a4458765653633b1:-2036265716,9d791744b9f82d107df1d2e8f5085e0b:-1637766814,c26913449ff82d10dde5c8aa4378fb98:-625188198,3b491b44a4f82d1064cbdd53e7647cda:1829010748,f9199744d7f82d10cfe21ae1b10d042d:1319760720,af0997447ef82d103f467674e60d3628:907082455,93b8d7047cf82d10226002c0eb8619e6:-632612149,62b8df04d7f82d102567f68a94f69b4c:-528705884,0478570494f82d10d5a6a244f1037be6:1847417685,09685704f5f82d109da5a4c11084fde1:160331957,7d285bc0c1f82d10412da381a1cfa105:-795424592,44e79b4c15b82d10195b1ba88a4eafd6:-1186327173,77975780daf82d10136ae3d96ad0fb6e:761782862,7767db809ff82d10461416d0adf8a58a:581546353,14561f0017f82d104f58909dec2e152d:-1782098193,61f593000ef82d107c34a3178b000a2c:1417618719,67449f4cd8b82d10054c3bb5385b3065:-371633174,7b141b4c95b82d1005a7139b9c9e0ca2:843708370,2f14574c2bb82d10525b7aa0f9a35484:-157588709,d7045b0c71b82d10ad26cc0810ffa271:-128580374,9ba2df88fcb82d102a907760fcf9ba0a:-1507325770,2f72578880b82d10953f3a8038196de0:-1912756298,1472df885db82d1047622d083cecc58e:-99391133,9a3257880db82d10232b73205ce313d9:-130323148,fe02db4837b82d10872babab4107bd85:-1913926686,1cf19b486ab82d103928cafaafdf1733:1838778521,22d19f4808b82d10866e6b78797b21b3:917585445,98c1db481cb82d10d0259c61549fb37d:-133319607,fca19f08e5b82d10177a4019f9536a5b:2016493443,fc71d348b1b82d1027ca7f3e3cabcd93:-222500545,49611b08ceb82d1068cc63765178fe62:-1989171907,3541db08c8b82d10fc24b2f1523be684:-224742577,d7315b0814b82d109790296d83b8421d:1337544723,9a211b081bb82d10f7fba90b4b0fa75c:-224742577,83015b0804b82d10e4d4eba84e104416:1805276696,be0197083ab82d10154f6d89cf257b48:-673604333,9089cddb8a24e51011a79cbe12a6c44a:-2138782629,9e5945dbe024e510c92c3bdc73d1dfa4:224935966,dd1945db9924e51018a1193710e4349d:-1285065326,4cc88d9b0624e510659d216ae5cf5362:-2138782629,edb8cd9bb224e510773d027be1f3caa2:-1355161990,67988d9bf124e51077b7a6bca38466a6:1689643255,52988d9b5924e510c2b9565a1e4f3e5d:122401977,ffc5cd578924e510bb6a39d399198f41:-1580941198,799541978724e5109cb103826a91e088:-1381905050,758541975824e5100309ab99e4e36484:1599905721,be6485170f24e510864b05130f67f380:-1466012750,8ba3c5d39724e510d99448a95b5c7bde:-1452848920,a993c993f524e510a1771893ddc6f068:63435147,3b33c9938a24e510d376be85d38c4f1d:-1166404580,0423c993aa24e51094fdf921e7430118:-1523455693,efe28d136224e510ebde2b125c55f7c0:-1452848920,e7d24193fe24e510c1499809a64ff758:2096462833,2e814ddfb6e0e510fd3c5b7a84cea561:-1452848920,fb01499f78e0e510ceda66e52b22344a:-901477178,2dbffc1f88e0e510686d74c78851641c:-1288036117,d38ffc1fd9e0e510a6b474bc97736016:824979473,4f4ff01fbfe0e51000bbb4afa28f1dd1:-739599635,d11f38db57e0e51059e1fcf765373568:-18237043,e0a73053cfe0e5107344b95babde59f8:1867607125,f2e6f01344e0e510489b1522d5691829:2074694087,044634df59a0e51054348071e3e30389:1233603301,dad5309f7ba0e5105d2c03b50fd339b0:-1176921765,36557c5f08a0e510af290b3d8fc73b31:-386641794,11457c5fc8a0e5101aadafe9de32712d:2069431976,be543cdb37a0e51018739c38c5766fc0:-465883456,4b8370db05a0e510bbdf2f0425a04944:-781131373,6e31bcd722a0e510edd3e66e04e49f54:1307843937,6b2134d7bea0e510cf3ccab6f5db3b0d:573744353,cc5ca4133ca0e510a5b362daa0cf1232:793897712,113ce8df7660e5109efa2c7c97725f26:-362662864,44fb6cdf0760e510911cac484281be7f:-754816848,9d8b649fe860e510047642050acc8b5f:153142193,6f4b20df4f60e510a4398185f2bade21:-112018041,492b649fbd60e510d0659d9b849cc078:-598884855,94aae05f3f60e51033476458de42b51b:1053612875,c27ae85fa460e51057d1095a276d8e3e:-1972543733,3a5a2c1f6460e510e60cdd7647192682:1851650593,273a6c1fdd60e5104cb9dbbcd9ef6884:-1834711537,882a2c1f0260e5105ff7686eb54d26f1:-449471637,6ef96c1fe060e5107d6c7a0c09f6617e:-24551441,6ae92c1fc760e5101b9feb356b6edbe8:-1146173191,74e92c1fe160e51023ff030a5b377779:215771088,acd9201f5c60e51034aef018c625cb28:1442257191,09a7245b2360e5109480ba18e3a8bae3:1833585855,ea976c1b0e60e5108f7e1e7b906145eb:1134446365,9e77205b7760e510ec4bd779896ce8f5:2145518494,5c676c1b6860e510634644ead9648be3:243763551,6a57acd75160e5106d4c0cd1312dc75e:1551714597,7a372cd7e860e51015f9c7899f7d007d:-1805734519,0237a01b6f60e51094f7e34fae678c80:2124082013,fac6ecd7af60e510b7fda73ea1e5b95f:-1508586681,81d52c574160e510cc53f337a77ae3d1:685792995,43a524579260e510e075ef7f087b2cc0:1992233635,fa652c57c160e510dafcea5ae7de60ca:-702206381,6e65ac57f260e51017699aeb33267179:-924944124,cc25a057ee60e510bf3bd97d230f60bd:-9526131,ce056c177c60e51050b8b82d9acd9d37:-128220249,e9f46c179e60e510c123115881c2a233:-329610905,00c4ecd3b960e5103383ad42a391026c:-485830233,f0a4ecd32760e51041b07bfdfffed7a7:-1329090035,6d8428d3b460e5104e3934b8cb3162c3:-1867924512,6604e4d32960e510e025f50f950783f9:-1604539427,24f328935560e51090988285e8a87901:583504669,e6b3a093f560e510038e9a6249e7b1a6:-1542153507,4b93ec93cf60e51080853e1b2998bea4:1986587293,0473e8931360e51055ae628e33941643:704512040,ef4360934960e510dd765b0d44d062ea:580651300,620360936060e510b9fa8b696eaac542:-1318539718,abf2a4536960e5108b753fa0609716e4:418323248,dac2a8531360e5108b76424c6346da99:437293248,adc2a4530a60e510a98825af0635e2ed:1577766378,bbb268538c60e5103d866006a217c402:-899998370,09a224133f60e5101942cec1e6f683f9:2010918879,f5502c5f9320e510649ba14db83ec8b6:-301576319,8840685f7220e51077ff2b641a7a14a5:593623471,71ef9c1f1d20e51082a12f74f48e3bd7:1845395533,9bdf541f3020e51088318cbfe419cb74:1613013827,29cf9c1fb320e510809a8d56d8454acf:-1650481913,65bf181f0920e510f5507d9b3cf32c08:1890067019,dcbf141f8720e510cb9d739452fd8925:-1718025626,022f5cdb5020e510776dad6cc3f76a4b:-2083498959,2d1f5cdb3f20e5103e9b32d9458dbf46:1223289251,e10e909b3220e510ca1289fe7b2a6f6b:643472536,abfd9c5b4220e51049ea98bcff5322dd:1266648101,a6dd905bea20e51025dcf6904196839a:1943165928,f4add81b6820e5106f12ca8a2b5d1f37:-1595323172,ab9d945b5120e5105bca70dbe3f1709e:97974651,99cc901bb720e510ce533ef8923dd7f7:1341677205,ccac14d7ff20e510bc0dcf18eff4c3fe:958712905,575c18d75620e510b6425d1ca915ced2:-116795329,505c14d7d720e5108c7a43ed08cb76b3:-104579054,823c9c979a20e510335059f173d387e4:1659539429,1928e7c784e8a510582fe8a1f9aa5ff4:-895570836,e2f7eb87a4e8a51093bc9b96cdca01f7:1416703987,f2c76b870ae8a51090e8ff87e0113ba4:-1884394446,f6a76b8736e8a510da8c5d2c862569df:-762675715,5b77e3876be8a51020d840447e7682a9:1123751010,36f62f47d6e8a51065cc143ae0b3f75a:-1255860466,5f652f8376e8a51007c4bfb41df5a016:-1219104305,fa8b4b7a9a20651039600da97f5f2a0b:1507150330,717b877abe206510a9a4f2adbe3b6d3e:-65391681,fc1b6ef6556c251074a5f905a51250e8:1375488071,2c49ea36b86c251094596972e7358743:-2129846993,45c7ca72b3a82510c46e6686221dddf3:47357698,7c970272b0a825105800ace160f12383:1048804316,eb77c27231a8251091a148c5253621cd:634999428,5b270e3262a82510466b8f1fdce2ff5d:-1852258885</update_guid_history>
+<update_set display_value=""/>
+<view/>
+</sys_update_xml>
+</unload>
