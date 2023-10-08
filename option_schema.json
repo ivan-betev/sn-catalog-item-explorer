@@ -3,7 +3,7 @@
     "hint": "Which catalog should this widget work with?",
     "name": "used_catalog",
     "section": "Data",
-    "default_value": "e0d08b13c3330100c8b837659bba8fb4",
+    "default_value": "<%CATALOG_SYS_ID%>",
     "label": "Used catalog",
     "type": "reference",
     "value": "sc_catalog",
@@ -25,7 +25,7 @@
     "label": "Show All Items category label",
     "type": "string"
 }, {
-    "hint": "Should debug loggin be enabled?",
+    "hint": "Should debug logging be enabled?",
     "name": "is_debug_mode_on",
     "section": "other",
     "default_value": "false",
