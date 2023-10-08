@@ -31,6 +31,3 @@ The primary goal of the Catalog Item Explorer widget is to serve as a valuable l
 2. Add the widget to your Service Portal page or portal theme.
 3. Configure the widget by adjusting the options based on your catalog's requirements.
 4. Enjoy an improved catalog browsing experience for both your end-users and catalog administrators.
-
-## License
-This project is licensed under the [MIT License](LICENSE).
