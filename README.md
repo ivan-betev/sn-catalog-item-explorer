@@ -33,4 +33,4 @@ The primary goal of the Catalog Item Explorer widget is to serve as a valuable l
 4. Enjoy an improved catalog browsing experience for both your end-users and catalog administrators.
 
 ## Review
-Review on Share Developers SeviceNow is Appreciated - https://developer.servicenow.com/connect.do#!/share/contents/3527027_catalog_item_explorer?v=1&t=PRODUCT_DETAILS
+Review on Share Developers SeviceNow is Appreciated - [LINK](https://developer.servicenow.com/connect.do#!/share/contents/3527027_catalog_item_explorer)
