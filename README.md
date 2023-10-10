@@ -1,6 +1,6 @@
 # Catalog Item Explorer
 
-Catalog Item Explorer is a powerful ServiceNow widget designed to enhance the catalog browsing experience within your Service Portal. It provides users with a convenient way to navigate and explore catalog items alphabetically, making it easier than ever to locate and access items in your ServiceNow catalog.
+Catalog Item Explorer is a ServiceNow widget designed to enhance the catalog browsing experience within your Service Portal. It provides users with a convenient way to navigate and explore catalog items alphabetically, making it easier than ever to locate and access items in your ServiceNow catalog.
 
 ## Main Idea - Learning Resource
 
