@@ -21,10 +21,10 @@
 
     /* Get Catalog ID */
     var catalogsId = $sp.getParameter("used_catalog") || options.used_catalog;
-
+    
     /* Get all catalog items */
     var catalogItems = new GlideRecordSecure('sc_cat_item');
-    catalogItems.addQuery('sc_catalogs', 'LIKE', catalogsId);
+    catalogItems.addQuery('sc_catalogs', 'IN', catalogsId);
     catalogItems.addQuery('active', true);
     catalogItems.orderBy('name');
     catalogItems.query();
