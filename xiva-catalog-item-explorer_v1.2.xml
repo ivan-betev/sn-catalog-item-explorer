@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="UTF-8"?><unload unload_date="2025-02-11 10:58:44">
+<sys_remote_update_set action="INSERT_OR_UPDATE">
+<application display_value="Global">global</application>
+<application_name>Global</application_name>
+<application_scope>global</application_scope>
+<application_version/>
+<collisions/>
+<commit_date/>
+<deleted/>
+<description>Added:
+- Support for content items with redirect to external URL.
+
+Fixed:
+- Lowcase letters appearing on the alphabet.</description>
+<inserted/>
+<name>Catalog Item Explorer - v1.2</name>
+<origin_sys_id/>
+<parent display_value=""/>
+<release_date>2025-02-11 11:00:00</release_date>
+<remote_base_update_set display_value=""/>
+<remote_parent_id/>
+<remote_sys_id>ff81b513c3af1a10e908f73ed40131ec</remote_sys_id>
+<state>loaded</state>
+<summary/>
+<sys_class_name>sys_remote_update_set</sys_class_name>
+<sys_created_by>ivan.betev</sys_created_by>
+<sys_created_on>2025-02-11 10:58:44</sys_created_on>
+<sys_id>6e62b953c3af1a10e908f73ed4013119</sys_id>
+<sys_mod_count>0</sys_mod_count>
+<sys_updated_by>ivan.betev</sys_updated_by>
+<sys_updated_on>2025-02-11 10:58:44</sys_updated_on>
+<update_set display_value=""/>
+<update_source display_value=""/>
+<updated/>
+</sys_remote_update_set>
+<sys_update_xml action="INSERT_OR_UPDATE">
+<action>INSERT_OR_UPDATE</action>
+<application display_value="Global">global</application>
+<category>customer</category>
+<comments/>
+<name>sp_widget_d0e60baf879861508009ac1a0cbb3593</name>
+<payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;record_update table="sp_widget"&gt;&lt;sp_widget action="INSERT_OR_UPDATE"&gt;&lt;category&gt;custom&lt;/category&gt;&lt;client_script&gt;&lt;![CDATA[api.controller = function($scope, $window) {
+    /* widget controller */
+    var c = this;
+
+    /* Variable and Service Initizalization */
+    setWidgetState("initial", c.data.catalogCategories);
+
+    /* Function to be called when "Show All Items" has been clicked */
+    c.showAllItems = function() {
+        setWidgetState("initial", c.data.catalogCategories);
+        c.filteredCatalogItems = c.displayItems = c.data.catalogItems;
+        c.isShowAllSelected = true;
+        c.data.currentPage = resetCurrentPage();
+        c.isMultiplePage = checkMultiPage(c.filteredCatalogItems.length, c.data.itemsPerPage);
+    };
+
+    /* Function to be called when "Quick Search" is active */
+    c.quickSearch = function() {
+        if ($scope.searchText.length == 0) {
+            setWidgetState("initial", c.data.catalogCategories);
+            return;
+        }
+
+        setWidgetState("default-selected", c.data.catalogCategories);
+        c.data.currentPage = resetCurrentPage();
+        c.filteredCatalogItems = c.displayItems = $scope.searchText.length &gt; 0 ? quickSearch(c.data.catalogItems, $scope.searchText) : [];
+        c.isMultiplePage = checkMultiPage(c.filteredCatalogItems.length, c.data.itemsPerPage);
+    };
+
+    /* Function to be called when category letter has been clicked */
+    c.selectCategory = function(category) {
+        setWidgetState("default", c.data.catalogCategories);
+        category.selected = true;
+        c.data.currentPage = resetCurrentPage();
+        c.filteredCatalogItems = selectCategory(c.data.catalogItems, category);
+        c.isMultiplePage = checkMultiPage(c.filteredCatalogItems.length, c.data.itemsPerPage);
+        c.displayItems = calculateDisplayCatalogItems(c.filteredCatalogItems, c.data.currentPage, c.data.itemsPerPage);
+    };
+
+    /* Function to be called when reset button has been pressed*/
+    c.resetState = function() {
+        setWidgetState("initial", c.data.catalogCategories);
+    };
+
+    /* Function to make the whole row clickable */
+    c.openUrl = function(itemId, externalUrl) {
+
+        var fullLink = "";
+        fullLink = c.data.defaultCatalogLink + itemId;
+
+        /* If external URL provided then replace the output with it */
+        if (externalUrl) {
+            fullLink = externalUrl
+        };
+
+        $window.open(fullLink, "_blank");
+    };
+
+    /* Pagination */
+
+    /* Function to be called by the form element when another page has been selected */
+    c.pageChanged = function() {
+        c.displayItems = calculateDisplayCatalogItems(c.filteredCatalogItems, c.data.currentPage, c.data.itemsPerPage);
+    };
+
+    /* Functions */
+
+    /* If it is a quick seach then we are giving filtered array based on the condition */
+    function quickSearch(items, searchText) {
+        return items.filter(function(item) {
+            try {
+                /* First we need to check that values are not null, otherwise assign them with empty space to avoid app crash */
+                var itemName = item.name != null ? item.name.toLowerCase() : "";
+                var itemDescription = item.description != null ? item.description.toLowerCase() : "";
+
+                /* Return item if quick search text we placed in our input field is contained in the item name or description */
+                return (itemName).indexOf(searchText.toLowerCase()) != -1 || (itemDescription).indexOf(searchText.toLowerCase()) != -1;
+            } catch (error) {
+                console.log("Something went wrong while filtering searching by item name or description");
+            }
+        });
+    }
+
+    /* If it is a quick seach then we are giving filtered array based on the condition */
+    function selectCategory(items, category) {
+        return items.filter(function(item) {
+            return (item.name.toLowerCase()).substring(0, 1) == category.letter.toLowerCase();
+        });
+    }
+
+    /* Function to reset the category selection to default state (all are non-selected) */
+    function resetSelected(items) {
+        for (var i = 0; i &lt; items.length; i++) {
+            items[i].selected = false;
+        }
+        c.isShowAllSelected = false;
+    }
+
+    /* Function to reset quick search text in the input field */
+    function resetQuickSearchText() {
+        $scope.searchText = "";
+    }
+
+    /* Function that accumulates reset of selected category and quick search text */
+    function setWidgetState(state, items) {
+        /* Default state is intended to clear quick search text and reset category selection only */
+        if (state == "default") {
+            resetSelected(items);
+            resetQuickSearchText();
+
+            return c.data.msgDefaultState;
+        }
+
+        /* Default-Selected is intended to reset the category selection state only e.g. for All items category selection */
+        if (state == "default-selected") {
+            resetSelected(items);
+
+            return c.data.msgCategoryReset;
+        }
+
+        /* Initial is intended to bring the widget to the initial state same as after pager reload */
+        if (state == "initial") {
+            resetQuickSearchText();
+            resetSelected(items);
+            c.filteredCatalogItems = c.data.catalogItems;
+            c.displayItems = [];
+            c.isShowAllSelected = false;
+            c.isMultiplePage = false;
+
+            return "Initialization has completed";
+        }
+    }
+
+    /* Function to flag multipaging which is used by pagination to display page selector */
+    function checkMultiPage(itemsToDisplay, numOfPages) {
+        return Math.ceil(itemsToDisplay / numOfPages) &gt; 1 ? true : false;
+    }
+
+    /* Function to reset the current page to 1 everytime the category changes */
+    function resetCurrentPage() {
+        return 1;
+    }
+
+    /* Function to prepare the list of items to display based on the selected page */
+    function calculateDisplayCatalogItems(filteredItemsArray, currentPage, itemsPerPage) {
+        return filteredItemsArray.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    }
+
+    /* Debug - Logs */
+    if (c.data.isDebugEnabled) {
+        console.log(c);
+    }
+};]]&gt;&lt;/client_script&gt;&lt;controller_as&gt;c&lt;/controller_as&gt;&lt;css&gt;.category-header {    
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;    
+    width: 100%;
+    padding: 10px 0;
+    margin: 0;
+}
+
+.catalog-category {
+    font-size: 25px;
+    font-weight: 600;
+}
+
+.category-letter:hover {
+    transform: scale(1.4);
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.selected {
+    transform: scale(1.4);
+    background-color: #FFFFFF;
+    color: darkgreen;
+}
+
+.list-inline {
+    margin: 0;
+}
+
+.list-group-item:hover {
+    background-color: #EEE;
+}
+
+.primary-display {
+    color: #428BCA;
+}
+
+.main-column {
+    cursor: pointer;
+}
+
+.panel-footer, .panel-heading {
+  	height: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .copyright {
+        align-self: center;
+    }
+}
+
+.xiva-quick-search-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    border-left: 1px solid #ccc;    
+
+    .fa-search::before {
+        padding-right: 1rem;        
+    }
+}&lt;/css&gt;&lt;data_table&gt;sp_instance&lt;/data_table&gt;&lt;demo_data/&gt;&lt;description&gt;Full list of items split by first letter category&lt;/description&gt;&lt;docs/&gt;&lt;field_list/&gt;&lt;has_preview&gt;false&lt;/has_preview&gt;&lt;id&gt;xiva-catalog-item-explorer&lt;/id&gt;&lt;internal&gt;false&lt;/internal&gt;&lt;link&gt;&lt;![CDATA[function link(scope, element, attrs, controller) {  }]]&gt;&lt;/link&gt;&lt;name&gt;Catalog Item Explorer&lt;/name&gt;&lt;option_schema&gt;[ {
+  "displayValue" : "Catalog",
+  "hint" : "Which catalog should this widget work with?",
+  "name" : "used_catalog",
+  "display_value_list" : [ ],
+  "section" : "Data",
+  "default_value" : "e0d08b13c3330100c8b837659bba8fb4",
+  "label" : "Used catalog",
+  "type" : "glide_list",
+  "value" : "sc_catalog",
+  "ed" : {
+    "reference" : "sc_catalog"
+  }
+}, {
+  "hint" : "How many items should be displayed per page?",
+  "name" : "items_per_page",
+  "section" : "Presentation",
+  "default_value" : "10",
+  "label" : "Items per page",
+  "type" : "integer"
+}, {
+  "hint" : "How should All Items category be called?",
+  "name" : "show_all_items_category_label",
+  "section" : "Presentation",
+  "default_value" : "All",
+  "label" : "Show All Items category label",
+  "type" : "string"
+}, {
+  "hint" : "Should debug logging be enabled?",
+  "name" : "is_debug_mode_on",
+  "section" : "other",
+  "default_value" : "false",
+  "label" : "Enable Debug",
+  "type" : "boolean"
+}, {
+  "hint" : "What link should the widget use to redirect to the catalog item?",
+  "name" : "default_item_link",
+  "section" : "Behavior",
+  "default_value" : "?id=sc_cat_item&amp;amp;sys_id=",
+  "label" : "Default link to the catalog item",
+  "type" : "string"
+}, {
+  "hint" : "How many pages should be displayed in paginator at once?",
+  "name" : "max_pages_in_paginator",
+  "section" : "Presentation",
+  "default_value" : "4",
+  "label" : "Maximum pages in the pagination component",
+  "type" : "integer"
+}, {
+  "hint" : "Should the First/Last links be displayed in the paginator?",
+  "name" : "show_boundary_links_in_paginator",
+  "section" : "Presentation",
+  "default_value" : "false",
+  "label" : "Show boundary links in the pagination component",
+  "type" : "boolean"
+}, {
+  "hint" : "What text should be used for Quick Search field as a placeholder?",
+  "name" : "quick_search_placeholder",
+  "section" : "Presentation",
+  "default_value" : "Quick search...",
+  "label" : "Quick Search placeholder message",
+  "type" : "string"
+}, {
+  "hint" : "What title should this widget have?",
+  "name" : "widget_title",
+  "section" : "Presentation",
+  "default_value" : "Catalog Item Explorer",
+  "label" : "Widget Title",
+  "type" : "string"
+}, {
+  "hint" : "Display copyright in the right bottom corner",
+  "name" : "show_copyright",
+  "section" : "Presentation",
+  "default_value" : "false",
+  "label" : "Show Copyright",
+  "type" : "boolean"
+} ]&lt;/option_schema&gt;&lt;public&gt;false&lt;/public&gt;&lt;roles/&gt;&lt;script&gt;&lt;![CDATA[(function () {
+
+    /* Configuration */
+    data.isDebugEnabled = (options.is_debug_mode_on === "true");
+    data.showCopyright = options.show_copyright === "true" || false;
+    data.showAllMsg = gs.getMessage(options.show_all_items_category_label) || gs.getMessage("All");
+    data.defaultCatalogLink = options.default_item_link ||"?id=sc_cat_item&amp;sys_id=";
+    data.itemsPerPage = $sp.getParameter("items_per_page") || options.items_per_page || 10;
+    data.maxPagesInPaginator = options.max_pages_in_paginator || 4;
+    data.showBoundaryLinks = (options.show_boundary_links_in_paginator === "true") || false;
+    data.widgetTitle = options.widget_title || "Catalog Item Explorer";
+
+    /* Used to set the default first page for the pagination */
+    data.currentPage = 1;    
+
+    /* Messages */
+    data.showAllMsg = gs.getMessage(options.show_all_items_category_label) || gs.getMessage("All");
+    data.msgQuickSearchPlaceholder = gs.getMessage(options.quick_search_placeholder);
+    data.msgDefaultState = gs.getMessage("Widget fields were set back to default");
+    data.msgCategoryReset = gs.getMessage("Category selection was reset");
+
+    /* Get Catalog ID */
+    var catalogsId = $sp.getParameter("used_catalog") || options.used_catalog;
+    
+    /* Get all catalog items */
+    var catalogItems = new GlideRecordSecure('sc_cat_item');
+    catalogItems.addQuery('sc_catalogs', 'IN', catalogsId);
+    catalogItems.addQuery('active', true);
+    catalogItems.orderBy('name');
+    catalogItems.query();
+
+    /* Save all sys_ids and names of catalog items to an array */
+    data.catalogItems = [];
+    
+    /* Declare a variable to host externalUrl */
+    var extUrl = "";
+
+    while (catalogItems.next()) {
+        if (!$sp.canReadRecord("sc_cat_item", catalogItems.sys_id.getDisplayValue())) {
+            continue;
+        }
+
+        extUrl = "";        
+        if (catalogItems.sys_class_name == "sc_cat_item_content") {
+            var contentItemGr = new GlideRecordSecure('sc_cat_item_content');
+            contentItemGr.get(catalogItems.getUniqueValue());
+            extUrl = contentItemGr.isValidRecord() ? contentItemGr.getValue('url') : "";            
+        }
+
+        data.catalogItems.push({
+            itemId: catalogItems.getUniqueValue(),
+            name: catalogItems.getValue('name'),
+            description: catalogItems.getValue('short_description'),
+						externalUrl: extUrl
+        });
+    }
+
+    /* Get first letters to generate categories */
+    data.catalogCategories = getUniqueFirstLetters(data.catalogItems);
+
+    function getUniqueFirstLetters(strings) {
+        /* Create an object to store unique first letters */ 
+		var firstLettersMap = {};
+
+		/* Iterate over the input array of strings */ 
+		for (var i = 0; i &lt; strings.length; i++) {
+				/* Get the first letter of the current string and convert it to uppercase */ 
+				var firstLetter = strings[i].name.charAt(0).toUpperCase();
+
+				/* Use the letter as a key in the object to ensure uniqueness */ 
+				if (!firstLettersMap[firstLetter]) {
+						firstLettersMap[firstLetter] = true;
+				}
+		}
+
+		/* Convert the object keys to an array of objects */ 
+		var firstLetters = [];
+		for (var letter in firstLettersMap) {
+				if (firstLettersMap.hasOwnProperty(letter)) {
+						firstLetters.push({
+								letter: letter,
+								selected: false
+						});
+				}
+		}
+
+		/* Sort the array of objects */ 
+		firstLetters.sort(function (a, b) {
+				return a.letter.localeCompare(b.letter);
+		});
+
+		/* Return the sorted array of unique first letters */ 
+		return firstLetters;
+    }
+})();]]&gt;&lt;/script&gt;&lt;servicenow&gt;false&lt;/servicenow&gt;&lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;&lt;sys_created_by&gt;ivan.betev&lt;/sys_created_by&gt;&lt;sys_created_on&gt;2023-01-16 09:48:44&lt;/sys_created_on&gt;&lt;sys_id&gt;d0e60baf879861508009ac1a0cbb3593&lt;/sys_id&gt;&lt;sys_mod_count&gt;1034&lt;/sys_mod_count&gt;&lt;sys_name&gt;Catalog Item Explorer&lt;/sys_name&gt;&lt;sys_package display_value="Global" source="global"&gt;global&lt;/sys_package&gt;&lt;sys_policy/&gt;&lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;&lt;sys_update_name&gt;sp_widget_d0e60baf879861508009ac1a0cbb3593&lt;/sys_update_name&gt;&lt;sys_updated_by&gt;ivan.betev&lt;/sys_updated_by&gt;&lt;sys_updated_on&gt;2025-02-11 10:58:31&lt;/sys_updated_on&gt;&lt;template&gt;&lt;![CDATA[&lt;div class="panel panel-default b"&gt;
+    &lt;!-- Panel Heading --&gt;
+    &lt;div class="panel-heading"&gt;
+        &lt;div&gt;&lt;h2 class="panel-title"&gt;{{::c.data.widgetTitle}}&lt;/h2&gt;&lt;/div&gt;
+        &lt;div&gt;&lt;button ng-if="c.filteredCatalogItems.length &gt; 0" type="button"
+            class="btn btn-primary btn-xs" ng-click="c.showAllItems()"&gt;{{::c.data.showAllMsg}}&lt;/button&gt;
+            &lt;button ng-if="c.displayItems.length &gt; 0" type="button"
+                class="btn btn-danger btn-xs hidden-xs" ng-click="c.resetState()"&gt;Reset&lt;/button&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;!-- Panel Body --&gt;
+    &lt;div class="panels-container"&gt;
+        &lt;div class="row category-header fit-content"&gt;
+            &lt;!-- Catalog Category Letters --&gt;
+            &lt;div class="col-lg-8 col-md-8 col-sm-12 col-xs-12"&gt;
+                &lt;ul class="list-inline text-center"&gt;
+                    &lt;li class="list-inline-item" ng-repeat="category in c.data.catalogCategories"&gt;
+                        &lt;div class="category-letter" item="category" ng-class="{'selected' : category.selected}"
+                            ng-click="c.selectCategory(category)"&gt;&lt;span
+                                class="catalog-category"&gt;{{category.letter}}&lt;/span&gt;
+                        &lt;/div&gt;
+                    &lt;/li&gt;                    
+                &lt;/ul&gt;
+            &lt;/div&gt;
+            &lt;!-- Quick Search Section --&gt;
+            &lt;div class="xiva-quick-search-container col-lg-4 col-md-4 hidden-sm hidden-xs"&gt;
+                &lt;span class="fa fa-search"&gt;&lt;/span&gt;&lt;input class="form-control" type="text"
+                    ng-model="searchText" ng-change="c.quickSearch()"
+                    placeholder="{{c.data.msgQuickSearchPlaceholder}}"&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;!-- Item List --&gt;
+    &lt;ul role="rowgroup" class="list-group padder-l-none padder-r-none"&gt;
+        &lt;li class="list-group-item" ng-repeat="item in c.displayItems | limitTo:c.data.itemsPerPage" style="margin:0;"
+            ng-click="c.openUrl(item.itemId, item.externalUrl)"&gt;
+            &lt;div role="cell" class="padder-l-none padder-r-none main-column"&gt;
+                &lt;div class="primary-display"&gt;
+                    {{item.name}}
+                &lt;/div&gt;
+                &lt;small class="text-muted"&gt;
+                    &lt;div class="secondary-display"&gt;
+                        &lt;span&gt;{{item.description}}&lt;/span&gt;
+                    &lt;/div&gt;
+                &lt;/small&gt;
+            &lt;/div&gt;
+        &lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;!-- Pagination --&gt;
+    &lt;div class="panels-container" ng-if="c.isMultiplePage" style="display: flex; justify-content: center;"&gt;
+        &lt;uib-pagination total-items="c.filteredCatalogItems.length" ng-model="c.data.currentPage"
+            ng-change="c.pageChanged()" items-per-page="c.data.itemsPerPage" max-size="c.data.maxPagesInPaginator"
+            boundary-links="c.data.showBoundaryLinks"&gt;
+        &lt;/uib-pagination&gt;
+    &lt;/div&gt;
+    &lt;!-- Panel Footer --&gt;
+    &lt;div class="panel-footer"&gt;Total items found:
+        {{c.filteredCatalogItems.length}}&lt;span class="copyright" ng-show="c.data.showCopyright"&gt;&amp;copy; 2024 Ivan Betev&lt;/span&gt;&lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;&lt;/sp_widget&gt;&lt;/record_update&gt;</payload>
+<payload_hash>-18760775</payload_hash>
+<remote_update_set display_value="Catalog Item Explorer - v1.2">6e62b953c3af1a10e908f73ed4013119</remote_update_set>
+<replace_on_upgrade>false</replace_on_upgrade>
+<sys_created_by>ivan.betev</sys_created_by>
+<sys_created_on>2025-02-11 10:58:44</sys_created_on>
+<sys_id>a262b953c3af1a10e908f73ed401311a</sys_id>
+<sys_mod_count>0</sys_mod_count>
+<sys_recorded_at>194f4a91d050000001</sys_recorded_at>
+<sys_updated_by>ivan.betev</sys_updated_by>
+<sys_updated_on>2025-02-11 10:58:44</sys_updated_on>
+<table/>
+<target_name>Catalog Item Explorer</target_name>
+<type>Widget</type>
+<update_domain>global</update_domain>
+<update_guid>535239537caf1a101588686766183504</update_guid>
+<update_guid_history>535239537caf1a101588686766183504:-18760775,11527153a2af1a10e9743db672252167:-1748714005,0f1ee9db1d6f1a1057b6a68b2bfdae67:87590231,75c9fedc471a8e504663837573f1b64e:881611714,3139f69c631a8e50a45d672292019c5d:1077099833,85093a5cbc1a8e5045d9d0253b6eb6ff:-384569519,ff873ad8821a8e506e9871205451168a:-542536792,3a733ad48c1a8e502dcc5d2fe08f597b:1560177267,53b7d97bee86ca507fda8d7e2b237deb:-1734933083,7c975d3bd786ca50f4f2fa9642a8b65f:-2096671778,f0375d3b3b86ca5075d1b43be8e26e59:1026955748,0a27d9f7b586ca50f28f7d74b4381026:1488301997,21469db75086ca508b7a531ace94af0a:1371897803,b3d515b7d986ca50a999f4b9a1c45ca7:571157535,c4c599b70a86ca50d0122afc734d9721:-8292366,77959db7b386ca50dcbaa9bfa0493703:-1345515733,215599b7ec86ca50ed7440ce3f03b31b:-1609760015,e0555977af86ca506abd4200f3a890ec:-361125686,81055577c986ca506a69a13b4eb87c7c:-115675897,d5f4d1778086ca502392d2e42f391668:-303621345,25e411779086ca504f4d363ff85def30:270517251,e9c45977fa86ca50d8c2c62c391bbde5:-707556541,7184d177cb86ca50f1c09ca443fdd463:778067991,f87455f3e286ca502c027295b28b7aec:-1058106304,dbf395b3ef86ca50b5432b0f06365a82:323368685,02f219b3b186ca5095793127f23eb8b3:1688463668,0ec29973c986ca5038edc8a15e46801d:1982794609,477219b36c86ca5019e62e9a2d4524ac:379777143,32be4dfb9046ca50651158fc2c4da451:-37726701,eead0dfb3e46ca5046106190ea29c307:771210046</update_guid_history>
+<update_set display_value=""/>
+<view/>
+</sys_update_xml>
+</unload>
